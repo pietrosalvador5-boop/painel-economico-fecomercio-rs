@@ -1,0 +1,42 @@
+/* Tema Fecomércio-RS: fundo azul #004B8B / #003563, detalhes em dourado #C69431, folha branca para o conteúdo.
+   Sempre claro, mesmo com o computador no modo escuro. */
+:root, :root[data-theme] {
+  color-scheme: light;
+  --color-bg: #ffffff; --color-fg: #1d2330; --color-fg-muted: #5f6675; --color-panel: #f4f7fb;
+  --color-border-line: #dde4ee; --cds-chart-grid: #e6ebf2; --cds-chart-axis: #9aa1ad;
+  --s1: #004B8B; --s2: #C69431; --s3: #5b8fc7; --s4: #8a6d2f;
+  --color-ok: #1f7a4d; --color-bad: #b4372f; --cds-chart-reference: #7b8291; --cds-chart-muted: #b9bfca;
+  --cds-surface-popover: #ffffff; --cds-border: #d5d9e0; --cds-shadow-popover: 0 4px 16px rgba(20, 28, 45, .12);
+  --cds-text-secondary: #5f6675;
+}
+@media (prefers-color-scheme: dark) { :root {
+  color-scheme: light;
+  --color-bg: #ffffff; --color-fg: #1d2330; --color-fg-muted: #5f6675; --color-panel: #f4f7fb;
+  --color-border-line: #dde4ee; --cds-chart-grid: #e6ebf2; --cds-chart-axis: #9aa1ad;
+  --s1: #004B8B; --s2: #C69431; --s3: #5b8fc7; --s4: #8a6d2f;
+  --color-ok: #1f7a4d; --color-bad: #b4372f; --cds-chart-reference: #7b8291; --cds-chart-muted: #b9bfca;
+  --cds-surface-popover: #ffffff; --cds-border: #d5d9e0; --cds-shadow-popover: 0 4px 16px rgba(20, 28, 45, .12);
+  --cds-text-secondary: #5f6675;
+} }
+html, body { background: linear-gradient(180deg, #004B8B 0%, #003563 100%) fixed; }
+.fc-faixa { height: 5px; background: #C69431; }
+#dash-root { padding-top: 20px !important; }
+.pe { background: #ffffff; border-radius: 14px; padding: 28px 28px 36px; box-shadow: 0 10px 30px rgba(0, 20, 50, .25); }
+.pe-title { color: #004B8B; font-size: 42px !important; line-height: 1.15; }
+.pe-sub { color: #004B8B; font-size: 20px !important; }
+.pe-org { color: #C69431; font-size: 14px !important; font-weight: 600; }
+.pe-take { font-size: 16px !important; }
+.pe-kpis { grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr)) !important; gap: 14px !important; }
+.pe-kpi { padding: 18px 18px 16px !important; gap: 6px !important; border-top: 3px solid #004B8B; }
+.pe-kpi-l { font-size: 14px !important; }
+.pe-kpi-v { font-size: 40px !important; color: #004B8B; }
+.pe-kpi-d { font-size: 13px !important; }
+.pe-h2 { color: #004B8B; border-left: 4px solid #C69431; padding-left: 10px; }
+.pe button[aria-pressed="true"] { background: #004B8B !important; color: #fff !important; border-color: #004B8B !important; }
+.pe-nav button:hover, .pe-seg button:hover { background: #eaf1f9; }
+.pe-rodape { color: #dfe8f3; }
+.pe-rodape a { color: #ffffff; }
+@media (max-width: 600px) {
+  .pe { padding: 18px 14px 24px; }
+  .pe-title { font-size: 32px !important; }
+}

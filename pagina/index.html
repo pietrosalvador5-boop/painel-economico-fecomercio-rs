@@ -1,0 +1,740 @@
+<style>
+/* Layout: cabeçalho com a leitura do mês, dois placares (Brasil e RS) e seções por tema em cartões de dois por linha. */
+#dash-root { --dash-gutter: clamp(16px, 3vw, 32px); }
+.pe { font-family: var(--font-anthropic-sans); color: var(--color-fg); display: flex; flex-direction: column; gap: var(--cds-gap-xl); max-width: 1280px; margin-inline: auto; }
+.pe-head { display: flex; flex-direction: column; gap: var(--cds-gap-xs); }
+.pe-title { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: var(--cds-font-size-title); margin: 0; text-wrap: balance; }
+.pe-head { position: relative; }
+.pe-logo { position: absolute; top: 18px; right: 0; height: 110px; width: auto; }
+@media (max-width: 700px) { .pe-logo { position: static; height: 56px; align-self: flex-start; margin-bottom: 8px; } }
+.pe-sub { font-size: var(--cds-font-size-heading); margin: 0; }
+.pe-org { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); margin: 0 0 6px; letter-spacing: .02em; }
+.pe-take { color: var(--color-fg-muted); font-size: var(--cds-font-size-body); margin: 0; max-width: 72ch; line-height: 1.5; }
+.pe-take b, .pe-kpi b { font-weight: 600; }
+.pe-bar { display: flex; flex-wrap: wrap; gap: var(--cds-gap-sm); align-items: center; justify-content: space-between; }
+.pe-nav { display: flex; flex-wrap: wrap; gap: var(--cds-gap-xs); }
+.pe-nav button, .pe-seg button { font: inherit; font-size: var(--cds-font-size-caption); color: var(--color-fg); background: transparent; border: 1px solid var(--color-border-line); border-radius: 999px; padding: 4px 12px; cursor: pointer; }
+.pe-nav button:hover, .pe-seg button:hover { background: var(--color-panel); }
+.pe-seg { display: inline-flex; gap: 4px; align-items: center; flex-wrap: wrap; }
+.pe-seg span { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); margin-right: 4px; }
+.pe-seg button[aria-pressed="true"] { background: var(--color-fg); color: var(--color-bg); border-color: var(--color-fg); }
+.pe button:focus-visible, .pe select:focus-visible { outline: 2px solid var(--color-fg); outline-offset: 2px; }
+.pe-sec { display: flex; flex-direction: column; gap: var(--cds-gap-md); scroll-margin-top: 16px; }
+.pe-h2 { font-size: var(--cds-font-size-heading); font-weight: var(--cds-font-weight-medium); margin: 0; display: flex; align-items: baseline; gap: var(--cds-gap-sm); flex-wrap: wrap; }
+.pe-h2 small { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); font-weight: 400; }
+.pe-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 10.5rem), 1fr)); gap: var(--cds-gap-sm); }
+.pe-kpi { background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-md); display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.pe-kpi-l { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+.pe-kpi-v { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: var(--cds-font-size-title); line-height: 1.15; font-variant-numeric: tabular-nums; min-height: 1.15em; }
+.pe-kpi-d { font-size: var(--cds-font-size-caption); font-variant-numeric: tabular-nums; color: var(--color-fg-muted); min-height: 1.3em; }
+.pe-kpi-d .up, .pe-kpi-d .down, .pe-kpi-d .flat { font-weight: 600; }
+.pe-kpi-d .good { color: var(--color-ok); } .pe-kpi-d .bad { color: var(--color-bad); }
+.pe-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 24rem), 1fr)); gap: var(--cds-gap-md); }
+.pe-grid2 { grid-template-columns: repeat(auto-fit, minmax(min(100%, 30rem), 1fr)); }
+.pe-card { background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-lg); display: flex; flex-direction: column; gap: var(--cds-gap-xs); min-width: 0; }
+.pe-card h3 { font-size: var(--cds-font-size-heading); font-weight: var(--cds-font-weight-medium); margin: 0; }
+.pe-note { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); margin: 0; line-height: 1.45; }
+.pe-legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); min-height: 1.4em; }
+.pe-legend i { display: inline-block; width: 14px; height: 3px; border-radius: 2px; vertical-align: middle; margin-right: 6px; }
+.pe-legend i.dash { background-image: linear-gradient(90deg, currentColor 60%, transparent 60%) !important; background-size: 6px 3px; }
+.pe-chart { position: relative; min-height: 240px; }
+.pe-chart.tall { min-height: 260px; }
+.pe-chart svg { display: block; overflow: visible; }
+.pe-chart text { font-family: var(--font-anthropic-sans); font-size: 11px; fill: var(--color-fg-muted); font-variant-numeric: tabular-nums; }
+.pe-chart text.end { fill: var(--color-fg); font-weight: 500; }
+.pe-tip { position: absolute; top: 0; left: 0; background: var(--cds-surface-popover); border: 1px solid var(--cds-border); border-radius: var(--cds-radius); box-shadow: var(--cds-shadow-popover); padding: var(--cds-pad-xs) var(--cds-pad-sm); font-size: var(--cds-font-size-caption); pointer-events: none; white-space: nowrap; z-index: 2; font-variant-numeric: tabular-nums; }
+.pe-tip .t { color: var(--cds-text-secondary); margin-bottom: 2px; }
+.pe-tip .r { display: flex; align-items: center; gap: 6px; }
+.pe-tip .r i { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+.pe-tip .r b { margin-left: auto; padding-left: 12px; font-weight: 600; }
+.pe-fail { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: inherit; color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); }
+.pe-fail::before { content: ""; width: .375rem; height: .375rem; border-radius: 50%; background: var(--color-bad); }
+.pe-tablebox { overflow-x: auto; }
+.pe table { border-collapse: collapse; width: 100%; font-size: var(--cds-font-size-body); font-variant-numeric: tabular-nums; }
+.pe th { text-align: right; font-weight: var(--cds-font-weight-medium); font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); padding: 6px 10px; border-bottom: 1px solid var(--color-border-line); white-space: nowrap; }
+.pe td { text-align: right; padding: 7px 10px; border-bottom: 1px solid var(--color-border-line); white-space: nowrap; }
+.pe th:first-child, .pe td:first-child, .pe th.l, .pe td.l { text-align: left; }
+.pe tr:last-child td { border-bottom: 0; }
+.pe td.neg { color: var(--color-bad); }
+.pe td .sw, .pe h3 .sw { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; }
+.pe h3 .sw { width: 10px; height: 10px; margin-right: 8px; vertical-align: 1px; }
+.pe select { font: inherit; font-size: var(--cds-font-size-caption); color: var(--color-fg); background: var(--color-bg); border: 1px solid var(--color-border-line); border-radius: 6px; padding: 3px 6px; }
+[data-dash-source-state=empty] { color: transparent; }
+[data-dash-source-state=refreshing] { opacity: .5; transition: opacity var(--cds-dur-slow); }
+</style>
+
+<div class="pe" id="painel">
+  <header class="pe-head">
+    <img class="pe-logo" src="LOGO_FECOMERCIO" alt="Fecomércio-RS">
+    <h1 class="pe-title">Painel Econômico</h1>
+    <p class="pe-sub">Indicadores do Rio Grande do Sul e do Brasil</p>
+    <p class="pe-org">Assessoria Econômica | Fecomércio-RS</p>
+    <p class="pe-take" id="leitura">
+      A Selic está em <b data-source="destaques" data-field="valor" data-where="chave=selic" class="dash-skeleton">—</b>% ao ano,
+      o IPCA acumula <b data-source="destaques" data-field="valor" data-where="chave=ipca" class="dash-skeleton">—</b>% em 12 meses
+      e a desocupação está em <b data-source="destaques" data-field="valor" data-where="chave=desoc" class="dash-skeleton">—</b>%.
+      No RS, a atividade (IBCR-RS) cresce <b data-source="destaques" data-field="valor" data-where="chave=ibcr_rs" class="dash-skeleton">—</b>% em 12 meses,
+      contra <b data-source="destaques" data-field="valor" data-where="chave=ibc" class="dash-skeleton">—</b>% do Brasil.
+    </p>
+  </header>
+
+  <div class="pe-bar">
+    <nav class="pe-nav" aria-label="Seções">
+      <button type="button" data-go="sec-atividade">Atividade</button>
+      <button type="button" data-go="sec-inflacao">Inflação</button>
+      <button type="button" data-go="sec-juros">Juros e câmbio</button>
+      <button type="button" data-go="sec-trabalho">Trabalho</button>
+      <button type="button" data-go="sec-pib">PIB</button>
+      <button type="button" data-go="sec-focus">Expectativas</button>
+    </nav>
+    <div class="pe-seg" role="group" aria-label="Período dos gráficos" id="periodo">
+      <span>Período</span>
+      <button type="button" data-anos="2">2 anos</button>
+      <button type="button" data-anos="5" aria-pressed="true">5 anos</button>
+      <button type="button" data-anos="0">Desde 2015</button>
+    </div>
+  </div>
+
+  <section class="pe-sec" id="sec-resumo">
+    <h2 class="pe-h2">Brasil <small>último dado de cada indicador e variação contra o período anterior</small></h2>
+    <div class="pe-kpis" id="kpis-br"></div>
+    <h2 class="pe-h2">Rio Grande do Sul <small>atividade em 12 meses contra os 12 meses anteriores</small></h2>
+    <div class="pe-kpis" id="kpis-rs"></div>
+  </section>
+
+  <section class="pe-sec" id="sec-atividade">
+    <h2 class="pe-h2">Atividade: Brasil e RS
+      <label class="pe-seg"><span>Medida</span>
+        <select id="medida">
+          <option value="var_12m">Acumulado em 12 meses (%)</option>
+          <option value="var_aa">Mês contra o mesmo mês do ano anterior (%)</option>
+          <option value="var_mm">Mês contra o mês anterior, dessazonalizado (%)</option>
+          <option value="indice_sa">Índice dessazonalizado</option>
+        </select>
+      </label>
+    </h2>
+    <div class="pe-grid pe-grid2" id="ativ-grid"></div>
+    <div class="pe-grid pe-grid2">
+      <div class="pe-card">
+        <h3 id="t-ativ-tab-br"><span class="sw" style="background:var(--s1)"></span>Brasil: último mês por indicador</h3>
+        <div class="pe-tablebox">
+          <table id="tab-ativ-br" data-source="atividade_ultimo" data-row-key="indicador,regiao">
+            <thead><tr>
+              <th data-field="indicador">Indicador</th><th data-field="data">Mês</th>
+              <th data-field="var_mm">No mês, dessaz.</th><th data-field="var_aa">Contra mesmo mês</th><th data-field="var_12m">Em 12 meses</th>
+            </tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="pe-card">
+        <h3 id="t-ativ-tab-rs"><span class="sw" style="background:var(--s2)"></span>Rio Grande do Sul: último mês por indicador</h3>
+        <div class="pe-tablebox">
+          <table id="tab-ativ-rs" data-source="atividade_ultimo" data-row-key="indicador,regiao">
+            <thead><tr>
+              <th data-field="indicador">Indicador</th><th data-field="data">Mês</th>
+              <th data-field="var_mm">No mês, dessaz.</th><th data-field="var_aa">Contra mesmo mês</th><th data-field="var_12m">Em 12 meses</th>
+            </tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <p class="pe-note">Varejo: volume de vendas (PMC). Serviços: volume (PMS). Indústria: produção física (PIM-PF). Atividade: IBC-Br e IBCR-RS, do Banco Central.</p>
+  </section>
+
+  <section class="pe-sec" id="sec-inflacao">
+    <h2 class="pe-h2">Inflação</h2>
+    <div class="pe-grid">
+      <div class="pe-card">
+        <h3>IPCA em 12 meses: Brasil e Porto Alegre</h3>
+        <p class="pe-note">Faixa cinza: intervalo de tolerância da meta do CMN; tracejado: centro da meta.</p>
+        <div class="pe-legend" id="lg-ipca"></div>
+        <div class="pe-chart" id="ch-ipca" data-source="precos meta"></div>
+      </div>
+      <div class="pe-card">
+        <h3>Serviços e núcleos (% em 12 meses)</h3>
+        <p class="pe-note">Serviços e a média dos cinco núcleos do BC mostram a inflação mais persistente.</p>
+        <div class="pe-legend" id="lg-nucleos"></div>
+        <div class="pe-chart" id="ch-nucleos" data-source="precos"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="pe-sec" id="sec-juros">
+    <h2 class="pe-h2">Juros e câmbio</h2>
+    <div class="pe-grid">
+      <div class="pe-card">
+        <h3>Selic e juro real (% ao ano)</h3>
+        <p class="pe-note">Juro real ex post: Selic descontada do IPCA acumulado em 12 meses.</p>
+        <div class="pe-legend" id="lg-juros"></div>
+        <div class="pe-chart" id="ch-juros" data-source="juros_cambio"></div>
+      </div>
+      <div class="pe-card">
+        <h3>Dólar (R$ por US$)</h3>
+        <p class="pe-note">Dólar PTAX de venda (fechamento diário do Banco Central). Meses anteriores: média dos
+          fechamentos do mês. Mês atual: média dos fechamentos dos últimos 10 dias úteis<span id="dolar-periodo"></span>.</p>
+        <div class="pe-legend" id="lg-dolar"></div>
+        <div class="pe-chart" id="ch-dolar" data-source="juros_cambio"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="pe-sec" id="sec-trabalho">
+    <h2 class="pe-h2">Mercado de trabalho</h2>
+    <div class="pe-card">
+      <h3>Taxa de desocupação (%)</h3>
+      <p class="pe-note">PNAD Contínua. Brasil e RS no trimestre civil; o Brasil também em trimestre móvel, divulgado todo mês.</p>
+      <div class="pe-legend" id="lg-trab"></div>
+      <div class="pe-chart" id="ch-trab" data-source="trabalho"></div>
+    </div>
+    <h2 class="pe-h2">Novo CAGED: saldo de empregos formais
+      <span class="pe-seg" role="group" aria-label="Medida do CAGED" id="caged-medida">
+        <button type="button" data-m="mes" aria-pressed="true">No mês</button>
+        <button type="button" data-m="ano">Acumulado no ano</button>
+        <button type="button" data-m="m12">Acumulado em 12 meses</button>
+      </span>
+    </h2>
+    <p class="pe-note">Admissões menos desligamentos (sem ajuste sazonal), com os saldos mensais divulgados pelo Ministério do
+      Trabalho e Emprego. Os acumulados somam esses saldos mensais e podem diferir um pouco do acumulado oficial,
+      que incorpora declarações entregues fora do prazo.</p>
+    <div class="pe-grid">
+      <div class="pe-card">
+        <h3>Brasil</h3>
+        <div class="pe-chart" id="ch-caged-br" data-source="caged"></div>
+      </div>
+      <div class="pe-card">
+        <h3>Rio Grande do Sul</h3>
+        <div class="pe-chart" id="ch-caged-rs" data-source="caged"></div>
+      </div>
+    </div>
+    <div class="pe-grid pe-grid2">
+      <div class="pe-card">
+        <h3><span class="sw" style="background:var(--s1)"></span>Brasil: saldo por setor</h3>
+        <div class="pe-tablebox"><table id="tab-caged-br"><thead><tr><th>Setor</th><th>No mês</th><th>No ano</th><th>Em 12 meses</th></tr></thead><tbody></tbody></table></div>
+      </div>
+      <div class="pe-card">
+        <h3><span class="sw" style="background:var(--s2)"></span>Rio Grande do Sul: saldo por setor</h3>
+        <div class="pe-tablebox"><table id="tab-caged-rs"><thead><tr><th>Setor</th><th>No mês</th><th>No ano</th><th>Em 12 meses</th></tr></thead><tbody></tbody></table></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="pe-sec" id="sec-pib">
+    <h2 class="pe-h2">PIB</h2>
+    <div class="pe-grid">
+      <div class="pe-card">
+        <h3>PIB: taxa acumulada em quatro trimestres (%)</h3>
+        <p class="pe-note">Crescimento dos últimos quatro trimestres contra os quatro trimestres anteriores.</p>
+        <div class="pe-legend" id="lg-pib4"></div>
+        <div class="pe-chart" id="ch-pib4" data-source="pib"></div>
+      </div>
+      <div class="pe-card">
+        <h3>PIB: variação contra o trimestre anterior, com ajuste sazonal (%)</h3>
+        <p class="pe-note">Passe o mouse para ver também a variação contra o mesmo trimestre do ano anterior e o acumulado em quatro trimestres.</p>
+        <div class="pe-legend"></div>
+        <div class="pe-chart" id="ch-pib" data-source="pib"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="pe-sec" id="sec-focus">
+    <h2 class="pe-h2">Expectativas do mercado <small id="focus-data">Focus, mediana de <span data-source="focus" data-field="data_pesquisa" data-row="0" class="dash-skeleton">—</span></small></h2>
+    <div class="pe-card">
+      <div class="pe-tablebox">
+        <table id="tab-focus" data-source="focus_tabela" data-row-key="indicador">
+          <thead><tr><th data-field="indicador">Indicador</th><th data-field="ano1">—</th><th data-field="ano2">—</th><th data-field="ano3">—</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <p class="pe-note">PIB, IPCA e IGP-M em %; Selic em % ao ano no fim do ano; câmbio em R$ por US$ no fim do ano.</p>
+    </div>
+  </section>
+</div>
+
+<script>
+// ---------- cálculos a partir dos dados (aparecem em Fontes) ----------
+dash.calc('destaques', {
+  title: 'Últimos valores dos indicadores',
+  description: 'Último dado de cada indicador e a diferença contra o período anterior.',
+  inputs: ['atividade', 'precos', 'juros_cambio', 'trabalho', 'pib', 'caged'],
+  fn: (atividade, precos, juros_cambio, trabalho, pib, caged) => {
+    const s = (rows, ok, campo) => rows.filter(r => ok(r) && r[campo] !== '' && r[campo] != null)
+      .map(r => ({ data: String(r.data).slice(0, 10), v: Number(r[campo]), obs: campo === 'dolar' ? (r.dolar_obs || '') : '' }));
+    const item = (chave, nome, serie, unidade, melhor, passo) => {
+      const a = serie[serie.length - 1], b = serie[serie.length - 2];
+      return { chave, nome, valor: a.v, data: a.data, delta: Math.round((a.v - b.v) * 100) / 100, unidade, melhor, passo, obs: a.obs || '' };
+    };
+    const cg = (reg) => {      // saldo do mês, no ano e em 12 meses (soma dos saldos mensais divulgados)
+      const p = cagedSerie(caged, reg, 'Total'), a = p[p.length - 1];
+      return { chave: reg === 'RS' ? 'caged_rs' : 'caged', nome: 'Saldo do Novo CAGED', valor: a.v,
+        data: a.d.toISOString().slice(0, 10), delta: a.m12, ano: a.ano, unidade: 'vagas', melhor: '', passo: 'mês', obs: '' };
+    };
+    const at = (ind, reg) => s(atividade, r => r.indicador === ind && r.regiao === reg, 'var_12m');
+    return [
+      item('selic', 'Selic', s(juros_cambio, () => true, 'selic'), '% a.a.', '', 'mês'),
+      item('ipca', 'IPCA em 12 meses', s(precos, r => r.serie === 'IPCA Brasil', 'var_12m'), '%', 'baixa', 'mês'),
+      item('desoc', 'Desocupação', s(trabalho, r => r.serie === 'Brasil (trimestre móvel)', 'desocupacao'), '%', 'baixa', 'trim. móvel'),
+      item('pib', 'PIB em 4 trimestres', s(pib, () => true, 'var_acum_4t'), '%', 'alta', 'trimestre'),
+      item('dolar', 'Dólar (R$/US$)', s(juros_cambio, () => true, 'dolar'), 'R$', '', 'mês'),
+      item('ibc', 'Atividade (IBC-Br) em 12 meses', at('Atividade (IBC)', 'Brasil'), '%', 'alta', 'mês'),
+      item('ibcr_rs', 'Atividade (IBCR-RS)', at('Atividade (IBC)', 'RS'), '%', 'alta', 'mês'),
+      item('varejo_rs', 'Varejo (PMC)', at('Varejo (PMC)', 'RS'), '%', 'alta', 'mês'),
+      item('servicos_rs', 'Serviços (PMS)', at('Serviços (PMS)', 'RS'), '%', 'alta', 'mês'),
+      item('industria_rs', 'Indústria (PIM)', at('Indústria (PIM)', 'RS'), '%', 'alta', 'mês'),
+      item('desoc_rs', 'Desocupação', s(trabalho, r => r.serie === 'RS (trimestral)', 'desocupacao'), '%', 'baixa', 'trimestre'),
+      item('ipca_poa', 'IPCA Porto Alegre, 12 meses', s(precos, r => r.serie === 'IPCA Porto Alegre', 'var_12m'), '%', 'baixa', 'mês'),
+      ...(caged.length ? [cg('Brasil'), cg('RS')] : []),
+    ];
+  },
+});
+
+dash.calc('atividade_ultimo', {
+  title: 'Atividade: último mês',
+  description: 'Última linha de cada indicador de atividade, no Brasil e no RS.',
+  inputs: ['atividade'],
+  fn: (atividade) => {
+    const ult = new Map();
+    for (const r of atividade) if (r.var_mm !== '' || r.var_12m !== '') ult.set(r.indicador + '|' + r.regiao, r);
+    return [...ult.values()].map(r => ({ indicador: r.indicador, regiao: r.regiao, data: String(r.data).slice(0, 10),
+      var_mm: r.var_mm === '' ? null : Number(r.var_mm), var_aa: r.var_aa === '' ? null : Number(r.var_aa),
+      var_12m: r.var_12m === '' ? null : Number(r.var_12m) }));
+  },
+});
+
+dash.calc('focus_tabela', {
+  title: 'Focus por ano',
+  description: 'Mediana do Focus por indicador, um ano por coluna.',
+  inputs: ['focus'],
+  fn: (focus) => {
+    const anos = [...new Set(focus.map(r => String(r.ano)))].sort();
+    const ind = [...new Set(focus.map(r => r.indicador))];
+    return ind.map(i => {
+      const o = { indicador: i };
+      anos.forEach((a, k) => { const r = focus.find(x => x.indicador === i && String(x.ano) === a); o['ano' + (k + 1)] = r ? Number(r.mediana) : null; });
+      o.anos = anos.join(',');
+      return o;
+    });
+  },
+});
+
+// ---------- Novo CAGED: saldo no mês, acumulado no ano e em 12 meses ----------
+function cagedSerie(rows, reg, setor) {
+  const p = rows.filter(r => r.regiao === reg && r.setor === setor)
+    .map(r => ({ d: parseD(r.data), v: Number(r.saldo), a: Number(r.admissoes), dl: Number(r.desligamentos) }))
+    .sort((x, y) => x.d - y.d);
+  let ano = 0;
+  p.forEach((x, i) => {
+    ano = (x.d.getUTCMonth() === 0 ? 0 : ano) + x.v; x.ano = ano;
+    x.m12 = i >= 11 ? p.slice(i - 11, i + 1).reduce((t, y) => t + y.v, 0) : NaN;
+  });
+  return p;
+}
+
+// ---------- formatação ----------
+const nf = (d) => new Intl.NumberFormat('pt-BR', { minimumFractionDigits: d, maximumFractionDigits: d });
+const f1 = nf(1), f2 = nf(2);
+const MESES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+const parseD = (s) => new Date(String(s).slice(0, 10) + 'T00:00:00Z');
+const mesTxt = (d) => `${MESES[d.getUTCMonth()]}/${d.getUTCFullYear()}`;
+const triTxt = (d) => `${Math.floor(d.getUTCMonth() / 3) + 1}º tri ${d.getUTCFullYear()}`;
+const sinal = (v, f) => (v > 0 ? '+' : v < 0 ? '−' : '') + f.format(Math.abs(v));
+const num = (x) => (x === '' || x == null ? NaN : Number(x));
+
+// ---------- estado da página ----------
+const estado = { anos: 5, medida: 'var_12m', caged: 'mes' };
+
+// ---------- placares ----------
+const KPI_BR = ['selic', 'ipca', 'desoc', 'pib', 'dolar', 'ibc', 'caged'];
+const KPI_RS = ['ibcr_rs', 'varejo_rs', 'servicos_rs', 'industria_rs', 'desoc_rs', 'ipca_poa', 'caged_rs'];
+const f0 = nf(0);
+function montaKpis(el, chaves) {
+  if (el.childElementCount) return;
+  for (const c of chaves) {
+    const card = document.createElement('div');
+    card.className = 'pe-kpi';
+    card.innerHTML = `<div class="pe-kpi-l" data-k="nome"></div>
+      <div class="pe-kpi-v dash-skeleton" data-source="destaques" data-field="valor" data-where="chave=${c}">—</div>
+      <div class="pe-kpi-d"><span data-source="destaques" data-field="delta" data-where="chave=${c}"></span> <span data-k="ref"></span></div>`;
+    card.dataset.chave = c;
+    el.appendChild(card);
+  }
+}
+function preencheKpis(rows) {
+  const by = new Map(rows.map(r => [r.chave, r]));
+  document.querySelectorAll('.pe-kpi').forEach(card => {
+    const r = by.get(card.dataset.chave);
+    const v = card.querySelector('.pe-kpi-v'), d = card.querySelector('[data-field="delta"]');
+    card.querySelector('[data-k="nome"]').textContent = r ? r.nome : '';
+    v.classList.remove('dash-skeleton');
+    if (!r) { v.textContent = '—'; d.textContent = ''; return; }
+    if (r.chave.startsWith('caged')) {
+      v.textContent = sinal(r.valor, f0);
+      d.textContent = ''; d.className = '';
+      card.querySelector('[data-k="ref"]').textContent =
+        `vagas em ${mesTxt(parseD(r.data))} · no ano: ${sinal(r.ano, f0)} · em 12 meses: ${sinal(r.delta, f0)}`;
+      return;
+    }
+    const fmt = r.chave === 'dolar' ? f2 : (r.chave === 'selic' ? f2 : f1);
+    v.textContent = (r.chave === 'dolar' ? 'R$ ' : '') + fmt.format(r.valor) + (r.unidade.startsWith('%') ? '%' : '');
+    const dfmt = r.chave === 'dolar' ? f2 : f1;
+    const pp = r.unidade.startsWith('%') ? ' p.p.' : '';
+    const zero = dfmt.format(Math.abs(r.delta)) === dfmt.format(0);
+    d.textContent = zero ? 'estável' : sinal(r.delta, dfmt) + pp;
+    d.className = '';
+    if (r.melhor && !zero) d.classList.add((r.delta > 0) === (r.melhor === 'alta') ? 'good' : 'bad');
+    const dt = parseD(r.data);
+    const ref = /trim/.test(r.passo) && r.passo !== 'trim. móvel' ? triTxt(dt) : mesTxt(dt);
+    const ant = mesTxt(new Date(Date.UTC(dt.getUTCFullYear(), dt.getUTCMonth() - 1, 1)));
+    const ateDia = (r.obs.match(/a (\d\d\/\d\d)\/\d{4}$/) || [])[1];
+    card.querySelector('[data-k="ref"]').textContent = r.obs
+      ? `vs média de ${ant} · média dos últimos 10 dias úteis, até ${ateDia}`
+      : `vs ${r.passo} anterior · ${ref}`;
+  });
+  document.querySelectorAll('#leitura [data-source="destaques"]').forEach(b => {
+    const r = by.get(new URLSearchParams(b.dataset.where).get('chave'));
+    b.classList.remove('dash-skeleton');
+    b.textContent = r ? (r.chave === 'selic' ? f2 : f1).format(r.valor) : '—';
+  });
+}
+
+// ---------- gráficos ----------
+function falha(el, msg) { el.innerHTML = ''; const d = document.createElement('div'); d.className = 'pe-fail'; d.textContent = msg || 'Falha ao carregar'; el.appendChild(d); }
+function legenda(el, series) {
+  el.innerHTML = '';
+  if (series.length < 2) return;
+  for (const s of series) {
+    const sp = document.createElement('span'), i = document.createElement('i');
+    i.style.background = s.cor; if (s.tracejado) { i.className = 'dash'; i.style.color = s.cor; i.style.background = 'transparent'; }
+    sp.appendChild(i); sp.appendChild(document.createTextNode(s.nome)); el.appendChild(sp);
+  }
+}
+function corte(pontosMax) { // primeira data dentro do período escolhido
+  if (!estado.anos) return new Date(0);
+  const d = new Date(pontosMax); d.setUTCFullYear(d.getUTCFullYear() - estado.anos); return d;
+}
+function tooltip(el) {
+  let t = el.querySelector('.pe-tip');
+  if (!t) { t = document.createElement('div'); t.className = 'pe-tip'; t.hidden = true; el.appendChild(t); }
+  return t;
+}
+function mostraTip(el, tip, x, y, titulo, linhas) {
+  tip.replaceChildren();
+  const h = document.createElement('div'); h.className = 't'; h.textContent = titulo; tip.appendChild(h);
+  for (const l of linhas) {
+    const r = document.createElement('div'); r.className = 'r';
+    if (l.cor) { const i = document.createElement('i'); i.style.background = l.cor; r.appendChild(i); }
+    r.appendChild(document.createTextNode(l.nome)); const b = document.createElement('b'); b.textContent = l.valor; r.appendChild(b);
+    tip.appendChild(r);
+  }
+  tip.hidden = false;
+  const W = el.clientWidth, tw = tip.offsetWidth, th = tip.offsetHeight;
+  let left = x + 12; if (left + tw > W) left = x - tw - 12; if (left < 0) left = 0;
+  tip.style.transform = `translate(${left}px, ${Math.max(0, y - th / 2)}px)`;
+}
+function medeTexto(svg, textos, cls) {
+  const t = svg.append('text').attr('class', cls || null); let w = 0;
+  for (const s of textos) { t.text(s); w = Math.max(w, t.node().getComputedTextLength()); }
+  t.remove(); return w;
+}
+
+function grafLinhas(el, series, o = {}) {
+  const H = o.altura || 240, W = Math.max(260, el.clientWidth);
+  const fmt = o.fmt || f1, titulo = o.titulo || mesTxt;
+  el.replaceChildren();
+  const pts = series.flatMap(s => s.pontos);
+  if (!pts.length) return;
+  const svg = d3.select(el).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`).attr('height', H);
+  const xs = d3.extent(pts, p => p.d);
+  let ys = d3.extent(pts, p => p.v);
+  for (const b of (o.faixas || [])) ys = [Math.min(ys[0], b.y0), Math.max(ys[1], b.y1)];
+  if (o.zero) ys = [Math.min(0, ys[0]), Math.max(0, ys[1])];
+  const y = d3.scaleLinear(ys, [H - 26, 10]).nice(5);
+  const ticks = y.ticks(5);
+  const ml = medeTexto(svg, ticks.map(t => fmt.format(t))) + 10;
+  const largo = W >= 480;
+  const fim = series.map(s => s.pontos[s.pontos.length - 1]).filter(Boolean);
+  const rotulos = series.map(s => { const p = s.pontos[s.pontos.length - 1]; return p ? (largo && series.length > 1 ? `${s.curto || s.nome} ` : '') + fmt.format(p.v) : ''; });
+  const mr = medeTexto(svg, rotulos, 'end') + 14;
+  const x = d3.scaleUtc(xs, [ml, W - mr]);
+  const g = svg.append('g');
+  for (const t of ticks) {
+    g.append('line').attr('x1', ml).attr('x2', W - mr).attr('y1', y(t)).attr('y2', y(t))
+      .style('stroke', t === 0 ? 'var(--cds-chart-axis)' : 'var(--cds-chart-grid)').attr('stroke-width', 1);
+    g.append('text').attr('x', ml - 8).attr('y', y(t)).attr('dy', '0.32em').attr('text-anchor', 'end').text(fmt.format(t));
+  }
+  const anos = (xs[1] - xs[0]) / 31557600000, cabe = Math.max(1, Math.floor((W - ml - mr) / 56));
+  const passo = Math.max(1, Math.ceil(anos / cabe));
+  for (const t of x.ticks(d3.utcYear.every(passo)))
+    g.append('text').attr('x', x(t)).attr('y', H - 6).attr('text-anchor', 'middle').text(t.getUTCFullYear());
+  for (const b of (o.faixas || [])) {
+    const a = Math.max(+b.x0, +xs[0]), z = Math.min(+b.x1, +xs[1]); if (z <= a) continue;
+    g.append('rect').attr('x', x(a)).attr('width', x(z) - x(a)).attr('y', y(b.y1)).attr('height', y(b.y0) - y(b.y1))
+      .style('fill', 'var(--cds-chart-grid)').attr('opacity', 0.9);
+    g.append('line').attr('x1', x(a)).attr('x2', x(z)).attr('y1', y(b.c)).attr('y2', y(b.c))
+      .style('stroke', 'var(--cds-chart-reference)').attr('stroke-dasharray', '4 3');
+  }
+  const linha = d3.line().defined(p => isFinite(p.v)).x(p => x(p.d)).y(p => y(p.v));
+  for (const s of series)
+    svg.append('path').attr('d', linha(s.pontos)).style('fill', 'none').style('stroke', s.cor).attr('stroke-width', 2)
+      .attr('stroke-linecap', 'round').attr('stroke-linejoin', 'round').attr('stroke-dasharray', s.tracejado ? '5 4' : null);
+  // rótulos no fim das linhas, sem se sobrepor
+  const lab = series.map((s, i) => ({ s, p: s.pontos[s.pontos.length - 1], txt: rotulos[i] })).filter(l => l.p);
+  lab.forEach(l => { l.y = y(l.p.v); }); lab.sort((a, b) => a.y - b.y);
+  for (let i = 1; i < lab.length; i++) if (lab[i].y - lab[i - 1].y < 13) lab[i].y = lab[i - 1].y + 13;
+  for (const l of lab) {
+    svg.append('circle').attr('cx', x(l.p.d)).attr('cy', y(l.p.v)).attr('r', 3.5).style('fill', l.s.cor).style('stroke', 'var(--color-panel)').attr('stroke-width', 1.5);
+    svg.append('text').attr('class', 'end').attr('x', x(xs[1]) + 8).attr('y', l.y).attr('dy', '0.32em').text(l.txt);
+  }
+  // camada de hover
+  const datas = [...new Set(pts.map(p => +p.d))].sort((a, b) => a - b);
+  const mapa = series.map(s => new Map(s.pontos.map(p => [+p.d, p.v])));
+  const regua = svg.append('line').attr('y1', 10).attr('y2', H - 26).style('stroke', 'var(--cds-chart-axis)').attr('opacity', 0);
+  const dots = series.map(s => svg.append('circle').attr('r', 4).style('fill', s.cor).style('stroke', 'var(--color-panel)').attr('stroke-width', 1.5).attr('opacity', 0));
+  const tip = tooltip(el);
+  svg.append('rect').attr('x', ml).attr('y', 0).attr('width', Math.max(0, W - mr - ml)).attr('height', H).style('fill', 'transparent')
+    .on('pointermove', (ev) => {
+      const [mx] = d3.pointer(ev); const alvo = +x.invert(mx);
+      let i = d3.bisectLeft(datas, alvo); if (i > 0 && (i >= datas.length || alvo - datas[i - 1] < datas[i] - alvo)) i--;
+      const d = datas[i], px = x(d); regua.attr('x1', px).attr('x2', px).attr('opacity', 1);
+      const linhas = [];
+      series.forEach((s, k) => { const v = mapa[k].get(d);
+        if (isFinite(v)) { dots[k].attr('cx', px).attr('cy', y(v)).attr('opacity', 1); linhas.push({ cor: series.length > 1 ? s.cor : null, nome: s.nome, valor: fmt.format(v) + (o.sufixo || '') }); }
+        else dots[k].attr('opacity', 0); });
+      const r = el.getBoundingClientRect(); const esc = r.width / W;
+      mostraTip(el, tip, px * esc, (d3.pointer(ev)[1]) * esc, titulo(new Date(d)), linhas);
+    })
+    .on('pointerleave', () => { regua.attr('opacity', 0); dots.forEach(c => c.attr('opacity', 0)); tip.hidden = true; });
+}
+
+function grafBarras(el, pts, o = {}) {
+  const H = o.altura || 240, W = Math.max(260, el.clientWidth), fmt = o.fmt || f1;
+  el.replaceChildren();
+  if (!pts.length) return;
+  const svg = d3.select(el).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`).attr('height', H);
+  const ys = d3.extent(pts, p => p.v); const y = d3.scaleLinear([Math.min(0, ys[0]), Math.max(0, ys[1])], [H - 26, 10]).nice(5);
+  const ticks = y.ticks(5), ml = medeTexto(svg, ticks.map(t => fmt.format(t))) + 10;
+  const x = d3.scaleBand(pts.map(p => +p.d), [ml, W - 8]).padding(0.25);
+  for (const t of ticks) {
+    svg.append('line').attr('x1', ml).attr('x2', W - 8).attr('y1', y(t)).attr('y2', y(t)).style('stroke', t === 0 ? 'var(--cds-chart-axis)' : 'var(--cds-chart-grid)');
+    svg.append('text').attr('x', ml - 8).attr('y', y(t)).attr('dy', '0.32em').attr('text-anchor', 'end').text(fmt.format(t));
+  }
+  const anosU = [...new Set(pts.map(p => p.d.getUTCFullYear()))];
+  const passo = Math.max(1, Math.ceil(anosU.length / Math.max(1, Math.floor((W - ml) / 56))));
+  for (const p of pts) if (p.d.getUTCMonth() === 0 && p.d.getUTCFullYear() % passo === 0)
+    svg.append('text').attr('x', x(+p.d) + x.bandwidth() / 2).attr('y', H - 6).attr('text-anchor', 'middle').text(p.d.getUTCFullYear());
+  const tip = tooltip(el);
+  const barras = svg.selectAll('rect.b').data(pts).join('rect').attr('class', 'b')
+    .attr('x', p => x(+p.d)).attr('width', x.bandwidth()).attr('y', p => y(Math.max(0, p.v))).attr('height', p => Math.max(1, Math.abs(y(p.v) - y(0))))
+    .attr('rx', Math.min(3, x.bandwidth() / 2)).style('fill', p => p.v < 0 ? 'var(--cds-chart-muted)' : dash.colors[0]);
+  svg.append('rect').attr('x', ml).attr('y', 0).attr('width', W - 8 - ml).attr('height', H).style('fill', 'transparent')
+    .on('pointermove', (ev) => {
+      const [mx, my] = d3.pointer(ev); const i = Math.max(0, Math.min(pts.length - 1, Math.floor((mx - ml) / x.step())));
+      const p = pts[i]; barras.attr('opacity', (q) => q === p ? 1 : 0.55);
+      const r = el.getBoundingClientRect(), esc = r.width / W;
+      mostraTip(el, tip, (x(+p.d) + x.bandwidth() / 2) * esc, my * esc, (o.titulo || triTxt)(p.d), o.linhas(p));
+    })
+    .on('pointerleave', () => { barras.attr('opacity', 1); tip.hidden = true; });
+}
+
+// ---------- montagem ----------
+const IND = ['Atividade (IBC)', 'Varejo (PMC)', 'Serviços (PMS)', 'Indústria (PIM)'];
+const NOME_IND = { 'Atividade (IBC)': 'Atividade econômica (IBC-Br e IBCR-RS)', 'Varejo (PMC)': 'Varejo: volume de vendas (PMC)',
+  'Serviços (PMS)': 'Serviços: volume (PMS)', 'Indústria (PIM)': 'Indústria: produção física (PIM-PF)' };
+function montaAtividade() {
+  const grid = document.getElementById('ativ-grid'); if (grid.childElementCount) return;
+  IND.forEach((ind, k) => {
+    const c = document.createElement('div'); c.className = 'pe-card';
+    c.innerHTML = `<h3></h3><div class="pe-legend"></div><div class="pe-chart" data-source="atividade" id="ch-ativ-${k}"></div>`;
+    c.querySelector('h3').textContent = NOME_IND[ind];
+    grid.appendChild(c);
+  });
+}
+function seriesDe(rows, filtro, campo, cut) {
+  return rows.filter(r => filtro(r) && r[campo] !== '' && r[campo] != null)
+    .map(r => ({ d: parseD(r.data), v: num(r[campo]) })).filter(p => p.d >= cut && isFinite(p.v));
+}
+function estadoOk(ids, els) {
+  for (const id of ids) {
+    const st = dash.data(id).status;
+    if (st === 'error' || st === 'connect' || st === 'declined' || st === 'missing') { els.forEach(e => falha(e)); return false; }
+    if (st !== 'ok') { els.forEach(e => e.replaceChildren()); return false; }
+  }
+  return true;
+}
+
+function desenha() {
+  montaKpis(document.getElementById('kpis-br'), KPI_BR);
+  montaKpis(document.getElementById('kpis-rs'), KPI_RS);
+  montaAtividade();
+  const C = dash.colors;
+
+  // placares
+  const dq = dash.data('destaques');
+  if (dq.status === 'ok') preencheKpis(dq.data);
+  else if (dq.status === 'error') document.querySelectorAll('.pe-kpi-v').forEach(v => { v.classList.remove('dash-skeleton'); v.textContent = '—'; });
+
+  // atividade
+  const elsAt = IND.map((_, k) => document.getElementById('ch-ativ-' + k));
+  if (estadoOk(['atividade'], elsAt)) {
+    const rows = dash.data('atividade').data;
+    const max = d3.max(rows, r => parseD(r.data)), cut = corte(max), m = estado.medida;
+    IND.forEach((ind, k) => {
+      const ser = [
+        { nome: 'Brasil', cor: C[0], pontos: seriesDe(rows, r => r.indicador === ind && r.regiao === 'Brasil', m, cut) },
+        { nome: 'RS', cor: C[1], pontos: seriesDe(rows, r => r.indicador === ind && r.regiao === 'RS', m, cut) }];
+      legenda(elsAt[k].previousElementSibling, ser);
+      grafLinhas(elsAt[k], ser, { zero: m !== 'indice_sa', sufixo: m === 'indice_sa' ? '' : '%' });
+    });
+  }
+  const ua = dash.data('atividade_ultimo');
+  if (ua.status === 'ok') {
+    for (const [reg, id] of [['Brasil', 'br'], ['RS', 'rs']]) {      // uma tabela para o Brasil e outra para o RS
+      const tb = document.querySelector(`#tab-ativ-${id} tbody`);
+      tb.replaceChildren();
+      const linhas = ua.data.filter(r => r.regiao === reg).sort((a, b) => IND.indexOf(a.indicador) - IND.indexOf(b.indicador));
+      for (const r of linhas) {
+        const tr = document.createElement('tr');
+        const td = (t, cls) => { const c = document.createElement('td'); c.textContent = t; if (cls) c.className = cls; tr.appendChild(c); return c; };
+        td(r.indicador); td(mesTxt(parseD(r.data)));
+        for (const k of ['var_mm', 'var_aa', 'var_12m']) td(r[k] == null ? '—' : sinal(r[k], f1) + '%', r[k] < 0 ? 'neg' : '');
+        tb.appendChild(tr);
+      }
+    }
+  }
+
+  // inflação
+  const elI = document.getElementById('ch-ipca'), elN = document.getElementById('ch-nucleos');
+  if (estadoOk(['precos', 'meta'], [elI, elN])) {
+    const rows = dash.data('precos').data, max = d3.max(rows, r => parseD(r.data)), cut = corte(max);
+    const sI = [{ nome: 'IPCA Brasil', cor: C[0], pontos: seriesDe(rows, r => r.serie === 'IPCA Brasil', 'var_12m', cut) },
+                { nome: 'IPCA Porto Alegre', curto: 'Porto Alegre', cor: C[1], pontos: seriesDe(rows, r => r.serie === 'IPCA Porto Alegre', 'var_12m', cut) }];
+    const faixas = dash.data('meta').data.map(r => ({ x0: parseD(`${r.ano}-01-01`), x1: parseD(`${Number(r.ano) + 1}-01-01`),
+      c: num(r.centro), y0: num(r.centro) - num(r.tolerancia), y1: num(r.centro) + num(r.tolerancia) }));
+    legenda(document.getElementById('lg-ipca'), sI);
+    grafLinhas(elI, sI, { faixas, zero: true, sufixo: '%' });
+    const sN = [{ nome: 'IPCA', cor: C[0], pontos: seriesDe(rows, r => r.serie === 'IPCA Brasil', 'var_12m', cut) },
+                { nome: 'Serviços', cor: C[2], pontos: seriesDe(rows, r => r.serie === 'IPCA serviços', 'var_12m', cut) },
+                { nome: 'Média dos núcleos', curto: 'Núcleos', cor: C[3], tracejado: true, pontos: seriesDe(rows, r => r.serie === 'Média dos núcleos', 'var_12m', cut) }];
+    legenda(document.getElementById('lg-nucleos'), sN);
+    grafLinhas(elN, sN, { zero: true, sufixo: '%' });
+  }
+
+  // juros e câmbio
+  const elJ = document.getElementById('ch-juros'), elD = document.getElementById('ch-dolar');
+  if (estadoOk(['juros_cambio'], [elJ, elD])) {
+    const rows = dash.data('juros_cambio').data, max = d3.max(rows, r => parseD(r.data)), cut = corte(max);
+    const sJ = [{ nome: 'Selic (meta)', curto: 'Selic', cor: C[0], pontos: seriesDe(rows, () => true, 'selic', cut) },
+                { nome: 'Juro real ex post', curto: 'Real', cor: C[1], pontos: seriesDe(rows, () => true, 'juro_real', cut) }];
+    legenda(document.getElementById('lg-juros'), sJ);
+    grafLinhas(elJ, sJ, { zero: true, fmt: f1, sufixo: '%' });
+    const sD = [{ nome: 'Dólar', cor: C[0], pontos: seriesDe(rows, () => true, 'dolar', cut) }];
+    legenda(document.getElementById('lg-dolar'), sD);
+    const obsD = new Map(rows.filter(r => r.dolar_obs).map(r => [String(r.data).slice(0, 10), r.dolar_obs]));
+    const ultObs = [...obsD.values()].pop();
+    document.getElementById('dolar-periodo').textContent = ultObs ? ` (${ultObs.replace('média dos últimos 10 dias úteis, ', '')})` : '';
+    grafLinhas(elD, sD, { fmt: f2, titulo: (d) => {
+      const o = obsD.get(d.toISOString().slice(0, 10));
+      return `${mesTxt(d)} (${o || 'média do mês'})`;
+    } });
+  }
+
+  // trabalho
+  const elT = document.getElementById('ch-trab');
+  if (estadoOk(['trabalho'], [elT])) {
+    const rows = dash.data('trabalho').data, max = d3.max(rows, r => parseD(r.data)), cut = corte(max);
+    const sT = [{ nome: 'Brasil (trimestral)', curto: 'Brasil', cor: C[0], pontos: seriesDe(rows, r => r.serie === 'Brasil (trimestral)', 'desocupacao', cut) },
+                { nome: 'RS (trimestral)', curto: 'RS', cor: C[1], pontos: seriesDe(rows, r => r.serie === 'RS (trimestral)', 'desocupacao', cut) },
+                { nome: 'Brasil (trimestre móvel)', curto: 'Brasil móvel', cor: C[0], tracejado: true, pontos: seriesDe(rows, r => r.serie === 'Brasil (trimestre móvel)', 'desocupacao', cut) }];
+    legenda(document.getElementById('lg-trab'), sT);
+    grafLinhas(elT, sT, { zero: true, sufixo: '%', titulo: (d) => `${mesTxt(d)} (trimestre que começa ou termina no mês)` });
+  }
+
+  // PIB
+  const elP = document.getElementById('ch-pib'), elP4 = document.getElementById('ch-pib4');
+  if (estadoOk(['pib'], [elP, elP4])) {
+    const rows = dash.data('pib').data, max = d3.max(rows, r => parseD(r.data)), cut = corte(max);
+    const pts = rows.map(r => ({ d: parseD(r.data), v: num(r.var_tri_sa), aa: num(r.var_interanual), a4: num(r.var_acum_4t) }))
+      .filter(p => p.d >= cut && isFinite(p.v));
+    const s4 = [{ nome: 'Acumulado em 4 trimestres', cor: C[0], pontos: pts.filter(p => isFinite(p.a4)).map(p => ({ d: p.d, v: p.a4 })) }];
+    legenda(document.getElementById('lg-pib4'), s4);
+    grafLinhas(elP4, s4, { zero: true, sufixo: '%', titulo: triTxt });
+    grafBarras(elP, pts, { linhas: (p) => [
+      { nome: 'Contra o trimestre anterior', valor: sinal(p.v, f1) + '%' },
+      { nome: 'Contra o mesmo trimestre de 1 ano antes', valor: sinal(p.aa, f1) + '%' },
+      { nome: 'Acumulado em 4 trimestres', valor: sinal(p.a4, f1) + '%' }] });
+  }
+
+  // Novo CAGED
+  const elCB = document.getElementById('ch-caged-br'), elCR = document.getElementById('ch-caged-rs');
+  if (estadoOk(['caged'], [elCB, elCR]) && dash.data('caged').data.length) {
+    const rows = dash.data('caged').data, max = d3.max(rows, r => parseD(r.data)), cut = corte(max);
+    const m = estado.caged;
+    for (const [reg, el, cor] of [['Brasil', elCB, C[0]], ['RS', elCR, C[1]]]) {
+      const todos = cagedSerie(rows, reg, 'Total').filter(p => p.d >= cut);
+      if (m === 'mes') {
+        grafBarras(el, todos, { fmt: f0, titulo: mesTxt, linhas: (p) => [
+          { nome: 'Saldo no mês', valor: sinal(p.v, f0) },
+          { nome: 'Admissões', valor: f0.format(p.a) },
+          { nome: 'Desligamentos', valor: f0.format(p.dl) },
+          { nome: 'Acumulado no ano', valor: sinal(p.ano, f0) },
+          { nome: 'Acumulado em 12 meses', valor: isFinite(p.m12) ? sinal(p.m12, f0) : '—' }] });
+      } else {
+        const nome = m === 'ano' ? 'Acumulado no ano' : 'Acumulado em 12 meses';
+        const s = [{ nome, cor, pontos: todos.filter(p => isFinite(p[m])).map(p => ({ d: p.d, v: p[m] })) }];
+        grafLinhas(el, s, { zero: true, fmt: f0 });
+      }
+    }
+    for (const [reg, id] of [['Brasil', 'tab-caged-br'], ['RS', 'tab-caged-rs']]) {
+      const tb = document.querySelector(`#${id} tbody`); tb.replaceChildren();
+      const ult = cagedSerie(rows, reg, 'Total').pop();
+      document.querySelector(`#${id} th`).textContent = `Setor (${mesTxt(ult.d)})`;
+      for (const setor of ['Comércio', 'Serviços', 'Indústria', 'Construção', 'Agropecuária', 'Total']) {
+        const u = cagedSerie(rows, reg, setor).pop(), tr = document.createElement('tr');
+        const tds = [setor, ...[u.v, u.ano, u.m12].map(v => sinal(v, f0))];
+        tds.forEach((t, k) => { const td = document.createElement('td'); td.textContent = t;
+          if (k && t.startsWith('−')) td.className = 'neg'; tr.appendChild(td); });
+        if (setor === 'Total') tr.style.fontWeight = '600';
+        tb.appendChild(tr);
+      }
+    }
+  }
+
+  // Focus
+  const ft = dash.data('focus_tabela'), fb = document.querySelector('#tab-focus tbody');
+  if (ft.status === 'ok' && ft.data.length) {
+    const anos = String(ft.data[0].anos).split(',');
+    document.querySelectorAll('#tab-focus th').forEach((th, i) => { if (i > 0) th.textContent = anos[i - 1] || ''; });
+    fb.replaceChildren();
+    const casas = { 'Câmbio': f2 };
+    for (const r of ft.data) {
+      const tr = document.createElement('tr');
+      const c = document.createElement('td'); c.textContent = r.indicador; tr.appendChild(c);
+      for (const k of ['ano1', 'ano2', 'ano3']) { const td = document.createElement('td'); td.textContent = r[k] == null ? '—' : (casas[r.indicador] || f2).format(r[k]); tr.appendChild(td); }
+      fb.appendChild(tr);
+    }
+  }
+  const fd = dash.data('focus');
+  const sp = document.querySelector('#focus-data [data-source="focus"]');
+  if (fd.status === 'ok' && fd.data.length) { sp.classList.remove('dash-skeleton'); const d = parseD(fd.data[0].data_pesquisa); sp.textContent = `${d.getUTCDate()} de ${MESES[d.getUTCMonth()]}/${d.getUTCFullYear()}`; }
+}
+
+dash.onData(desenha);
+
+// controles
+document.querySelectorAll('#periodo button').forEach(b => b.addEventListener('click', () => {
+  estado.anos = Number(b.dataset.anos);
+  document.querySelectorAll('#periodo button').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+  desenha();
+}));
+document.getElementById('medida').addEventListener('change', (e) => { estado.medida = e.target.value; desenha(); });
+document.querySelectorAll('#caged-medida button').forEach(b => b.addEventListener('click', () => {
+  estado.caged = b.dataset.m;
+  document.querySelectorAll('#caged-medida button').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+  desenha();
+}));
+const go = (el) => { el.scrollIntoView({ behavior: 'smooth', block: 'start' }); dash.setLink(el.id); };
+document.querySelectorAll('[data-go]').forEach(b => b.addEventListener('click', () => go(document.getElementById(b.dataset.go))));
+const nomeado = document.getElementById(location.hash.slice(1));
+if (nomeado) setTimeout(() => go(nomeado), 300);
+</script>
