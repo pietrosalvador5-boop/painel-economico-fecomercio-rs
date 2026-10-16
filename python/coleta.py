@@ -221,6 +221,43 @@ def pib():
             for d, v in sorted(dados.items()) if d >= INICIO])
 
 
+# ---------- PIB do RS (estimativa do DEE/SPGG) ----------
+def pib_rs():
+    """PIB trimestral do RS estimado pelo Departamento de Economia e Estatística (DEE/SPGG-RS).
+
+    A planilha "série histórica" muda de endereço a cada divulgação; o link é lido da página do DEE.
+    Coluna PIB das abas de variação contra o trimestre anterior (com ajuste sazonal), contra o mesmo trimestre do
+    ano anterior e acumulada em quatro trimestres.
+    """
+    import io
+    import re
+    import openpyxl
+    pag = subprocess.run(["curl", "-sL", "-m", "120", "-A", "Mozilla/5.0", "https://dee.rs.gov.br/pib-trimestral"],
+                         capture_output=True, text=True).stdout
+    links = re.findall(r'href="([^"]*serie-historica[^"]*\.xlsx)"', pag)
+    if not links:
+        raise RuntimeError("DEE: planilha da série histórica não encontrada na página do PIB trimestral")
+    url = links[0] if links[0].startswith("http") else "https://dee.rs.gov.br" + links[0]
+    xlsx = subprocess.run(["curl", "-sL", "-m", "180", "-A", "Mozilla/5.0", url], capture_output=True).stdout
+    wb = openpyxl.load_workbook(io.BytesIO(xlsx), data_only=True)
+    abas = {"var_tri_sa": "Taxa trimestre contra anterior", "var_interanual": "Taxa trimestral",
+            "var_acum_4t": "Taxa acumulada em 4 trimestres"}
+    romano = {"I": 1, "II": 2, "III": 3, "IV": 4}
+    dados = {}
+    for campo, aba in abas.items():
+        linhas = list(wb[aba].iter_rows(values_only=True))
+        col = linhas[3].index("PIB")
+        for l in linhas:
+            m = re.fullmatch(r"(\d{4})\.(I|II|III|IV)", str(l[0] or "").strip())
+            if m and isinstance(l[col], (int, float)):
+                a, t = int(m[1]), romano[m[2]]
+                d = dados.setdefault(f"{a}-{(t - 1) * 3 + 1:02d}-01", {"trimestre": f"{t}º trimestre {a}"})
+                d[campo] = round(l[col], 4)
+    gravar("pib_rs", ["data", "trimestre", "var_tri_sa", "var_interanual", "var_acum_4t"],
+           [[d, v["trimestre"], v.get("var_tri_sa"), v.get("var_interanual"), v.get("var_acum_4t")]
+            for d, v in sorted(dados.items()) if d >= INICIO])
+
+
 # ---------- expectativas (Focus) ----------
 def focus():
     url = ("https://olinda.bcb.gov.br/olinda/servico/Expectativas/versao/v1/odata/ExpectativasMercadoAnuais"
@@ -237,7 +274,7 @@ def focus():
 
 def main():
     DADOS.mkdir(exist_ok=True)
-    for etapa in (atividade, precos, juros_cambio, trabalho, pib, focus):
+    for etapa in (atividade, precos, juros_cambio, trabalho, pib, pib_rs, focus):
         etapa()
     print("Coleta concluída em", time.strftime("%d/%m/%Y %H:%M"))
 

@@ -195,9 +195,7 @@
         <button type="button" data-m="m12">Acumulado em 12 meses</button>
       </span>
     </h2>
-    <p class="pe-note">Admissões menos desligamentos (sem ajuste sazonal), série com ajustes do Ministério do Trabalho e
-      Emprego: cada mês inclui as declarações entregues fora do prazo e desconta as exclusões informadas depois.
-      O último mês ainda não tem ajustes e é igual ao número divulgado.</p>
+    <p class="pe-note">Admissões menos desligamentos (sem ajuste sazonal).</p>
     <div class="pe-grid">
       <div class="pe-card">
         <h3>Brasil</h3>
@@ -222,18 +220,23 @@
 
   <section class="pe-sec" id="sec-pib">
     <h2 class="pe-h2">PIB</h2>
+    <div class="pe-card">
+      <h3>PIB: taxa acumulada em quatro trimestres (%)</h3>
+      <p class="pe-note">Crescimento dos últimos quatro trimestres contra os quatro trimestres anteriores. Brasil: IBGE (Contas
+        Nacionais Trimestrais). RS: estimativa do Departamento de Economia e Estatística (DEE/SPGG-RS).</p>
+      <div class="pe-legend" id="lg-pib4"></div>
+      <div class="pe-chart" id="ch-pib4" data-source="pib"></div>
+    </div>
     <div class="pe-grid">
       <div class="pe-card">
-        <h3>PIB: taxa acumulada em quatro trimestres (%)</h3>
-        <p class="pe-note">Crescimento dos últimos quatro trimestres contra os quatro trimestres anteriores.</p>
-        <div class="pe-legend" id="lg-pib4"></div>
-        <div class="pe-chart" id="ch-pib4" data-source="pib"></div>
+        <h3>Brasil: variação contra o trimestre anterior, com ajuste sazonal (%)</h3>
+        <p class="pe-note">IBGE. Passe o mouse para ver também a variação contra o mesmo trimestre do ano anterior e o acumulado em quatro trimestres.</p>
+        <div class="pe-chart" id="ch-pib" data-source="pib"></div>
       </div>
       <div class="pe-card">
-        <h3>PIB: variação contra o trimestre anterior, com ajuste sazonal (%)</h3>
-        <p class="pe-note">Passe o mouse para ver também a variação contra o mesmo trimestre do ano anterior e o acumulado em quatro trimestres.</p>
-        <div class="pe-legend"></div>
-        <div class="pe-chart" id="ch-pib" data-source="pib"></div>
+        <h3>RS: variação contra o trimestre anterior, com ajuste sazonal (%)</h3>
+        <p class="pe-note">Estimativa do DEE/SPGG-RS. Passe o mouse para ver também a variação contra o mesmo trimestre do ano anterior e o acumulado em quatro trimestres.</p>
+        <div class="pe-chart" id="ch-pib-rs" data-source="pib_rs"></div>
       </div>
     </div>
   </section>
@@ -257,8 +260,8 @@
 dash.calc('destaques', {
   title: 'Últimos valores dos indicadores',
   description: 'Último dado de cada indicador e a diferença contra o período anterior.',
-  inputs: ['atividade', 'precos', 'juros_cambio', 'trabalho', 'pib', 'caged'],
-  fn: (atividade, precos, juros_cambio, trabalho, pib, caged) => {
+  inputs: ['atividade', 'precos', 'juros_cambio', 'trabalho', 'pib', 'caged', 'pib_rs'],
+  fn: (atividade, precos, juros_cambio, trabalho, pib, caged, pib_rs) => {
     const s = (rows, ok, campo) => rows.filter(r => ok(r) && r[campo] !== '' && r[campo] != null)
       .map(r => ({ data: String(r.data).slice(0, 10), v: Number(r[campo]), obs: campo === 'dolar' ? (r.dolar_obs || '') : '' }));
     const item = (chave, nome, serie, unidade, melhor, passo) => {
@@ -276,6 +279,7 @@ dash.calc('destaques', {
       item('ipca', 'IPCA em 12 meses', s(precos, r => r.serie === 'IPCA Brasil', 'var_12m'), '%', 'baixa', 'mês'),
       item('desoc', 'Desocupação', s(trabalho, r => r.serie === 'Brasil (trimestre móvel)', 'desocupacao'), '%', 'baixa', 'trim. móvel'),
       item('pib', 'PIB em 4 trimestres', s(pib, () => true, 'var_acum_4t'), '%', 'alta', 'trimestre'),
+      item('pib_rs', 'PIB em 4 trimestres (estimativa do DEE)', s(pib_rs, () => true, 'var_acum_4t'), '%', 'alta', 'trimestre'),
       item('dolar', 'Dólar (R$/US$)', s(juros_cambio, () => true, 'dolar'), 'R$', '', 'mês'),
       item('ibc', 'Atividade (IBC-Br) em 12 meses', at('Atividade (IBC)', 'Brasil'), '%', 'alta', 'mês'),
       item('ibcr_rs', 'Atividade (IBCR-RS)', at('Atividade (IBC)', 'RS'), '%', 'alta', 'mês'),
@@ -346,7 +350,7 @@ const estado = { anos: 5, medida: 'var_12m', caged: 'mes' };
 
 // ---------- placares ----------
 const KPI_BR = ['selic', 'ipca', 'desoc', 'pib', 'dolar', 'ibc', 'caged'];
-const KPI_RS = ['ibcr_rs', 'varejo_rs', 'servicos_rs', 'industria_rs', 'desoc_rs', 'ipca_poa', 'caged_rs'];
+const KPI_RS = ['pib_rs', 'ibcr_rs', 'varejo_rs', 'servicos_rs', 'industria_rs', 'desoc_rs', 'ipca_poa', 'caged_rs'];
 const f0 = nf(0);
 function montaKpis(el, chaves) {
   if (el.childElementCount) return;
@@ -526,7 +530,7 @@ function grafBarras(el, pts, o = {}) {
   const tip = tooltip(el);
   const barras = svg.selectAll('rect.b').data(pts).join('rect').attr('class', 'b')
     .attr('x', p => x(+p.d)).attr('width', x.bandwidth()).attr('y', p => y(Math.max(0, p.v))).attr('height', p => Math.max(1, Math.abs(y(p.v) - y(0))))
-    .attr('rx', Math.min(3, x.bandwidth() / 2)).style('fill', p => p.v < 0 ? 'var(--cds-chart-muted)' : dash.colors[0]);
+    .attr('rx', Math.min(3, x.bandwidth() / 2)).style('fill', p => p.v < 0 ? 'var(--cds-chart-muted)' : (o.cor || dash.colors[0]));
   svg.append('rect').attr('x', ml).attr('y', 0).attr('width', W - 8 - ml).attr('height', H).style('fill', 'transparent')
     .on('pointermove', (ev) => {
       const [mx, my] = d3.pointer(ev); const i = Math.max(0, Math.min(pts.length - 1, Math.floor((mx - ml) / x.step())));
@@ -656,13 +660,19 @@ function desenha() {
     const rows = dash.data('pib').data, max = d3.max(rows, r => parseD(r.data)), cut = corte(max);
     const pts = rows.map(r => ({ d: parseD(r.data), v: num(r.var_tri_sa), aa: num(r.var_interanual), a4: num(r.var_acum_4t) }))
       .filter(p => p.d >= cut && isFinite(p.v));
-    const s4 = [{ nome: 'Acumulado em 4 trimestres', cor: C[0], pontos: pts.filter(p => isFinite(p.a4)).map(p => ({ d: p.d, v: p.a4 })) }];
+    const rowsRS = dash.data('pib_rs').data || [];
+    const ptsRS = rowsRS.map(r => ({ d: parseD(r.data), v: num(r.var_tri_sa), aa: num(r.var_interanual), a4: num(r.var_acum_4t) }))
+      .filter(p => p.d >= cut && isFinite(p.v));
+    const s4 = [{ nome: 'Brasil (IBGE)', curto: 'Brasil', cor: C[0], pontos: pts.filter(p => isFinite(p.a4)).map(p => ({ d: p.d, v: p.a4 })) },
+                { nome: 'RS (estimativa do DEE)', curto: 'RS', cor: C[1], pontos: ptsRS.filter(p => isFinite(p.a4)).map(p => ({ d: p.d, v: p.a4 })) }];
     legenda(document.getElementById('lg-pib4'), s4);
     grafLinhas(elP4, s4, { zero: true, sufixo: '%', titulo: triTxt });
-    grafBarras(elP, pts, { linhas: (p) => [
+    const linhasPib = (p) => [
       { nome: 'Contra o trimestre anterior', valor: sinal(p.v, f1) + '%' },
       { nome: 'Contra o mesmo trimestre de 1 ano antes', valor: sinal(p.aa, f1) + '%' },
-      { nome: 'Acumulado em 4 trimestres', valor: sinal(p.a4, f1) + '%' }] });
+      { nome: 'Acumulado em 4 trimestres', valor: sinal(p.a4, f1) + '%' }];
+    grafBarras(elP, pts, { linhas: linhasPib });
+    grafBarras(document.getElementById('ch-pib-rs'), ptsRS, { linhas: linhasPib, cor: C[1] });
   }
 
   // Novo CAGED

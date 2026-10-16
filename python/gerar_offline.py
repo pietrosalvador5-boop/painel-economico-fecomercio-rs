@@ -18,7 +18,7 @@ DADOS, PAGINA = PASTA / "dados", PASTA / "pagina"
 SAIDA = PASTA / "offline" / "Painel_Economico_Fecomercio_RS.html"
 SITE = PASTA / "index.html"
 LOGO = PASTA / "logo" / "logo_fecomercio_cor.png"
-DATASETS = ["atividade", "precos", "meta", "juros_cambio", "trabalho", "pib", "focus", "caged"]
+DATASETS = ["atividade", "precos", "meta", "juros_cambio", "trabalho", "pib", "pib_rs", "focus", "caged"]
 
 # Variáveis de estilo que o dashboard do Claude fornece; aqui recriadas, com tema claro e escuro.
 TEMA = """
@@ -114,7 +114,7 @@ def main():
 <script>{SHIM}</script>
 {pagina}
 <p class="pe-rodape">Versão offline gerada em {date.today():%d/%m/%Y}, com dados até {ult[5:7]}/{ult[:4]}.
-Fontes: IBGE (PMC, PMS, PIM-PF, IPCA, PNAD Contínua, Contas Nacionais), Banco Central (IBC-Br, IBCR-RS, Selic,
+Fontes: IBGE (PMC, PMS, PIM-PF, IPCA, PNAD Contínua, Contas Nacionais), DEE/SPGG-RS (PIB trimestral do RS), Banco Central (IBC-Br, IBCR-RS, Selic,
 câmbio, Focus), Ministério do Trabalho e Emprego (Novo CAGED) e Conselho Monetário Nacional (metas de inflação).
 Elaboração: Assessoria Econômica | Fecomércio-RS.</p>
 </div>
