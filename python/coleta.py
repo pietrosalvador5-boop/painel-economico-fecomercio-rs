@@ -232,11 +232,14 @@ def pib_rs():
     import io
     import re
     import openpyxl
-    pag = subprocess.run(["curl", "-sL", "-m", "120", "-A", "Mozilla/5.0", "https://dee.rs.gov.br/pib-trimestral"],
-                         capture_output=True, text=True).stdout
+    r = subprocess.run(["curl", "-sL", "-m", "120", "-A", "Mozilla/5.0", "-w", "\n%{http_code}",
+                        "https://dee.rs.gov.br/pib-trimestral"], capture_output=True, text=True)
+    pag, codigo = r.stdout.rsplit("\n", 1) if "\n" in r.stdout else ("", r.stdout)
     links = re.findall(r'href="([^"]*serie-historica[^"]*\.xlsx)"', pag)
-    if not links:
-        raise RuntimeError("DEE: planilha da série histórica não encontrada na página do PIB trimestral")
+    if not links:      # o site do DEE às vezes não responde (ou bloqueia o servidor): mantém o último pib_rs.csv
+        print(f"AVISO: DEE não respondeu (HTTP {codigo or 'sem resposta'}, curl {r.returncode}); "
+              "PIB do RS mantido como estava")
+        return
     url = links[0] if links[0].startswith("http") else "https://dee.rs.gov.br" + links[0]
     xlsx = subprocess.run(["curl", "-sL", "-m", "180", "-A", "Mozilla/5.0", url], capture_output=True).stdout
     wb = openpyxl.load_workbook(io.BytesIO(xlsx), data_only=True)
