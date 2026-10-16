@@ -174,21 +174,29 @@ def dolar_mensal():
     return media, obs
 
 
+def ipca_esperado_12m():
+    """Focus: mediana da expectativa de IPCA para os próximos 12 meses (suavizada), último dado de cada mês."""
+    url = ("https://olinda.bcb.gov.br/olinda/servico/Expectativas/versao/v1/odata/ExpectativasMercadoInflacao12Meses"
+           "?$top=20000&$orderby=Data%20asc&$format=json&$select=Data,Mediana&$filter=Indicador%20eq%20'IPCA'"
+           "%20and%20Suavizada%20eq%20'S'%20and%20baseCalculo%20eq%200%20and%20Data%20ge%20'2014-01-01'")
+    return {r["Data"][:8] + "01": r["Mediana"] for r in baixar(url)["value"]}    # em ordem: fica o último do mês
+
+
 def juros_cambio():
     selic_dia = {**sgs(432, "01/01/2014", "31/12/2023"), **sgs(432, "01/01/2024")}   # API: até 10 anos por consulta
     selic = {}
     for d in sorted(selic_dia):
         if d <= HOJE.isoformat():
             selic[d[:8] + "01"] = selic_dia[d]                                          # último valor do mês
-    ipca12 = sgs(13522)
+    esperado = ipca_esperado_12m()
     dolar, obs = dolar_mensal()
     linhas = []
     for d in sorted(set(selic) | set(dolar)):
         if d < INICIO:
             continue
-        real = 100 * ((1 + selic[d] / 100) / (1 + ipca12[d] / 100) - 1) if d in ipca12 and d in selic else None
-        linhas.append([d, selic.get(d, ""), r4(real), r4(dolar.get(d)), obs.get(d, "")])
-    gravar("juros_cambio", ["data", "selic", "juro_real", "dolar", "dolar_obs"], linhas)
+        real = 100 * ((1 + selic[d] / 100) / (1 + esperado[d] / 100) - 1) if d in esperado and d in selic else None
+        linhas.append([d, selic.get(d, ""), r4(esperado.get(d)), r4(real), r4(dolar.get(d)), obs.get(d, "")])
+    gravar("juros_cambio", ["data", "selic", "ipca_esperado_12m", "juro_real", "dolar", "dolar_obs"], linhas)
 
 
 # ---------- mercado de trabalho ----------

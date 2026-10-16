@@ -166,7 +166,7 @@
     <div class="pe-grid">
       <div class="pe-card">
         <h3>Selic e juro real (% ao ano)</h3>
-        <p class="pe-note">Juro real ex post: Selic descontada do IPCA acumulado em 12 meses.</p>
+        <p class="pe-note">Juro real ex ante: Selic descontada da mediana das expectativas de mercado para o IPCA dos próximos 12 meses (Focus, suavizada), no último dado de cada mês.</p>
         <div class="pe-legend" id="lg-juros"></div>
         <div class="pe-chart" id="ch-juros" data-source="juros_cambio"></div>
       </div>
@@ -625,7 +625,7 @@ function desenha() {
   if (estadoOk(['juros_cambio'], [elJ, elD])) {
     const rows = dash.data('juros_cambio').data, max = d3.max(rows, r => parseD(r.data)), cut = corte(max);
     const sJ = [{ nome: 'Selic (meta)', curto: 'Selic', cor: C[0], pontos: seriesDe(rows, () => true, 'selic', cut) },
-                { nome: 'Juro real ex post', curto: 'Real', cor: C[1], pontos: seriesDe(rows, () => true, 'juro_real', cut) }];
+                { nome: 'Juro real ex ante', curto: 'Real', cor: C[1], pontos: seriesDe(rows, () => true, 'juro_real', cut) }];
     legenda(document.getElementById('lg-juros'), sJ);
     grafLinhas(elJ, sJ, { zero: true, fmt: f1, sufixo: '%' });
     const sD = [{ nome: 'Dólar', cor: C[0], pontos: seriesDe(rows, () => true, 'dolar', cut) }];
