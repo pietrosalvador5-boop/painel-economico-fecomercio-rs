@@ -277,7 +277,7 @@ def focus():
 
 def main():
     DADOS.mkdir(exist_ok=True)
-    for etapa in (atividade, precos, juros_cambio, trabalho, pib, pib_rs, focus):
+    for etapa in (atividade, precos, juros_cambio, trabalho, pib, focus):
         etapa()
     print("Coleta concluída em", time.strftime("%d/%m/%Y %H:%M"))
 
