@@ -22,8 +22,8 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - name: Instala o leitor de .7z (microdados do CAGED) e de Excel (PIB do RS, DEE)
-        run: pip3 install py7zr openpyxl
+      - name: Instala o leitor de .7z (microdados do CAGED)
+        run: pip3 install py7zr
 
       - name: Baixa os dados
         run: |
