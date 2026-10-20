@@ -290,11 +290,25 @@ def focus():
     gravar("focus", ["indicador", "ano", "data_pesquisa", "mediana"], linhas)
 
 
+ETAPAS = (atividade, precos, juros_cambio, trabalho, pib, focus)
+
+
 def main():
+    """Roda cada fonte separadamente: se uma não responder, mantém o CSV anterior dela e segue com as outras.
+
+    As fontes que falharam ficam em falhas.txt; o robô do GitHub publica o resto e depois avisa a falha.
+    """
     DADOS.mkdir(exist_ok=True)
-    for etapa in (atividade, precos, juros_cambio, trabalho, pib, focus):
-        etapa()
-    print("Coleta concluída em", time.strftime("%d/%m/%Y %H:%M"))
+    falhas = []
+    for etapa in ETAPAS:
+        try:
+            etapa()
+        except Exception as e:                       # erro de uma fonte não para as outras
+            print(f"FALHOU {etapa.__name__}: {e} (mantido o dado anterior)", flush=True)
+            falhas.append(f"{etapa.__name__}: {e}")
+    (PASTA / "falhas.txt").write_text("".join(f + "\n" for f in falhas), encoding="utf-8")
+    print("Coleta concluída em", time.strftime("%d/%m/%Y %H:%M"),
+          f"({len(falhas)} fonte(s) com falha)" if falhas else "")
 
 
 if __name__ == "__main__":

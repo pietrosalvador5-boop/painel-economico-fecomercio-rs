@@ -4,8 +4,11 @@
 name: Atualiza o painel
 
 on:
-  schedule:
-    - cron: "10 12 * * *"   # 12h10 UTC = 9h10 em Brasília (o GitHub pode atrasar alguns minutos)
+  schedule:            # vários horários porque o GitHub costuma atrasar (às vezes horas) os agendamentos;
+    - cron: "10 12 * * *"   # 9h10 em Brasília
+    - cron: "40 12 * * *"   # 9h40
+    - cron: "10 14 * * *"   # 11h10
+    - cron: "10 17 * * *"   # 14h10 (quando não há dado novo, a execução não muda nada)
   workflow_dispatch:
 
 permissions:
@@ -25,10 +28,13 @@ jobs:
       - name: Instala o leitor de .7z (microdados do CAGED)
         run: pip3 install py7zr
 
-      - name: Baixa os dados
-        run: |
-          python3 python/coleta.py
-          python3 python/caged.py
+      - name: Baixa os dados (BCB e IBGE)
+        run: python3 python/coleta.py
+
+      - name: Baixa o Novo CAGED
+        id: caged
+        continue-on-error: true
+        run: python3 python/caged.py
 
       - name: Gera a página
         run: python3 python/gerar_offline.py
@@ -42,5 +48,14 @@ jobs:
             echo "Nada mudou."
           else
             git commit -m "Atualiza o painel ($(date +%d/%m/%Y))"
+            git pull --rebase -X theirs origin main   # traz edições feitas no GitHub; em conflito, vale o dado novo do robô
             git push
+          fi
+
+      - name: Avisa se alguma fonte falhou (o resto já foi publicado)
+        run: |
+          if [ -s falhas.txt ] || [ "${{ steps.caged.outcome }}" = "failure" ]; then
+            echo "Fontes que não responderam (ficou o dado anterior):"; cat falhas.txt 2>/dev/null
+            [ "${{ steps.caged.outcome }}" = "failure" ] && echo "caged: microdados do MTE não baixaram"
+            exit 1
           fi
