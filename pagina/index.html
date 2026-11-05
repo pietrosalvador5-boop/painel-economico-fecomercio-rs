@@ -110,6 +110,7 @@
           <option value="var_aa">Mês contra o mesmo mês do ano anterior (%)</option>
           <option value="var_mm">Mês contra o mês anterior, dessazonalizado (%)</option>
           <option value="indice_sa">Índice dessazonalizado</option>
+          <option value="mm3_sa">Média móvel de 3 meses contra os 3 meses anteriores, dessazonalizado (%)</option>
         </select>
       </label>
     </h2>
@@ -555,6 +556,13 @@ function montaAtividade() {
   });
 }
 function seriesDe(rows, filtro, campo, cut) {
+  if (campo === 'mm3_sa') { // média dos 3 últimos meses contra a dos 3 anteriores, índice dessazonalizado (6 meses seguidos)
+    const s = seriesDe(rows, filtro, 'indice_sa', new Date(0)).sort((a, b) => a.d - b.d);
+    const mes = d => d.getUTCFullYear() * 12 + d.getUTCMonth();
+    const media = (i) => (s[i - 2].v + s[i - 1].v + s[i].v) / 3;
+    return s.map((p, i) => i >= 5 && mes(p.d) - mes(s[i - 5].d) === 5 ? { d: p.d, v: 100 * (media(i) / media(i - 3) - 1) } : null)
+      .filter(p => p && p.d >= cut);
+  }
   return rows.filter(r => filtro(r) && r[campo] !== '' && r[campo] != null)
     .map(r => ({ d: parseD(r.data), v: num(r[campo]) })).filter(p => p.d >= cut && isFinite(p.v));
 }
@@ -588,8 +596,7 @@ function desenha() {
         { nome: 'Brasil', cor: C[0], pontos: seriesDe(rows, r => r.indicador === ind && r.regiao === 'Brasil', m, cut) },
         { nome: 'RS', cor: C[1], pontos: seriesDe(rows, r => r.indicador === ind && r.regiao === 'RS', m, cut) }];
       legenda(elsAt[k].previousElementSibling, ser);
-      grafLinhas(elsAt[k], ser, { zero: m !== 'indice_sa', sufixo: m === 'indice_sa' ? '' : '%' });
-    });
+      grafLinhas(elsAt[k], ser, { zero: m !== 'indice_sa', sufixo: m === 'indice_sa' ? '' : '%' });    });
   }
   const ua = dash.data('atividade_ultimo');
   if (ua.status === 'ok') {

@@ -41,8 +41,8 @@ TEMA = """
   color-scheme: dark;
 } }
 :root {
-  --font-anthropic-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --font-anthropic-serif: Georgia, "Times New Roman", serif;
+  --font-anthropic-sans: "Century Gothic", CenturyGothic, AppleGothic, "URW Gothic", sans-serif;
+  --font-anthropic-serif: "Century Gothic", CenturyGothic, AppleGothic, "URW Gothic", sans-serif;
   --cds-font-size-caption: 12px; --cds-font-size-body: 14px; --cds-font-size-heading: 16px; --cds-font-size-title: 28px;
   --cds-font-weight-medium: 600;
   --cds-gap-xs: 6px; --cds-gap-sm: 10px; --cds-gap-md: 16px; --cds-gap-lg: 24px; --cds-gap-xl: 32px;
