@@ -117,9 +117,9 @@ def acum12(serie):
 # ---------- atividade: PMC, PMS, PIM-PF e IBC ----------
 def atividade():
     pesquisas = {
-        "Varejo (PMC)": (8880, {"indice_sa": "7170", "var_mm": "11708", "var_aa": "11709", "var_12m": "11711"}, "c11046/56734"),
-        "Serviços (PMS)": (5906, {"indice_sa": "7168", "var_mm": "11623", "var_aa": "11624", "var_12m": "11626"}, "c11046/56726"),
-        "Indústria (PIM)": (8888, {"indice_sa": "12607", "var_mm": "11601", "var_aa": "11602", "var_12m": "11604"}, "c544/129314"),
+        "Varejo (PMC)": (8880, {"indice_sa": "7170", "var_mm": "11708", "var_aa": "11709", "var_12m": "11711", "var_ano": "11710"}, "c11046/56734"),
+        "Serviços (PMS)": (5906, {"indice_sa": "7168", "var_mm": "11623", "var_aa": "11624", "var_12m": "11626", "var_ano": "11625"}, "c11046/56726"),
+        "Indústria (PIM)": (8888, {"indice_sa": "12607", "var_mm": "11601", "var_aa": "11602", "var_12m": "11604", "var_ano": "11603"}, "c544/129314"),
     }
     linhas = []
     for ind, (tab, var, cls) in pesquisas.items():
@@ -139,10 +139,16 @@ def atividade():
             v12 = None
             if i >= 23 and all(x in ns for x in ds[i - 23:i + 1]):
                 v12 = 100 * (sum(ns[x] for x in ds[i - 11:i + 1]) / sum(ns[x] for x in ds[i - 23:i - 11]) - 1)
+            ano, m = int(d[:4]), int(d[5:7])          # acumulado no ano: jan até o mês contra o mesmo período do ano anterior
+            atual = [f"{ano}-{k:02d}-01" for k in range(1, m + 1)]
+            antes = [f"{ano - 1}-{k:02d}-01" for k in range(1, m + 1)]
+            vano = None
+            if all(x in ns for x in atual + antes):
+                vano = 100 * (sum(ns[x] for x in atual) / sum(ns[x] for x in antes) - 1)
             linhas.append([d, regiao, "Atividade (IBC)", r4(sa[d]), r4(mm and round(mm, 2)), r4(aa and round(aa, 2)),
-                           r4(v12 and round(v12, 2))])
+                           r4(v12 and round(v12, 2)), r4(vano and round(vano, 2))])
     linhas = sorted((l for l in linhas if l[0] >= INICIO), key=lambda l: (l[2], l[1], l[0]))
-    gravar("atividade", ["data", "regiao", "indicador", "indice_sa", "var_mm", "var_aa", "var_12m"], linhas)
+    gravar("atividade", ["data", "regiao", "indicador", "indice_sa", "var_mm", "var_aa", "var_12m", "var_ano"], linhas)
 
 
 # ---------- preços: IPCA, serviços, núcleos e Porto Alegre ----------
