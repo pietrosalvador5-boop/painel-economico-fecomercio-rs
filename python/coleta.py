@@ -287,7 +287,7 @@ def focus():
     url = ("https://olinda.bcb.gov.br/olinda/servico/Expectativas/versao/v1/odata/ExpectativasMercadoAnuais"
            "?$top=400&$orderby=Data%20desc&$format=json&$filter=baseCalculo%20eq%200%20and%20(Indicador%20eq%20'IPCA'"
            "%20or%20Indicador%20eq%20'PIB%20Total'%20or%20Indicador%20eq%20'Selic'%20or%20Indicador%20eq%20"
-           "'C%C3%A2mbio'%20or%20Indicador%20eq%20'IGP-M')")
+           "'C%C3%A2mbio'%20or%20Indicador%20eq%20'IGP-M'%20or%20Indicador%20eq%20'Taxa%20de%20desocupa%C3%A7%C3%A3o')")
     x = baixar(url)["value"]
     ult = max(r["Data"] for r in x)
     anos = {str(HOJE.year + k) for k in range(3)}
